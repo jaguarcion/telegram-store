@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String        @id @default(cuid())
+  telegramId  BigInt?       @unique
+  username    String?
+  balance     Float         @default(0)
+  orders      Order[]
+  transactions Transaction[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Store {
+  id        String   @id @default(cuid())
+  name      String
+  apiUrl    String
+  apiKey    String
+  apiFormat String   @default("CANBOSO")
+  isActive  Boolean  @default(true)
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StandardProduct {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  keywords    String   // comma separated keywords
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Transaction {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  amount    Float
+  type      String   // "topup" or "purchase"
+  status    String   // "completed", "pending"
+  createdAt DateTime @default(now())
+}
+
+model Order {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  storeId     String
+  store       Store    @relation(fields: [storeId], references: [id])
+  productId   String   // ID from the remote store API
+  productName String
+  price       Float
+  status      String   // "completed", "failed"
+  createdAt   DateTime @default(now())
+}
